@@ -1,5 +1,4 @@
 import pytest
-from sqlalchemy import event
 
 from redteam.core.database import engine
 from redteam.core.session import SessionLocal
@@ -8,20 +7,19 @@ from redteam.core.session import SessionLocal
 @pytest.fixture
 def db_session():
     connection = engine.connect()
-    transaction = connection.begin()
+    outer_transaction = connection.begin()
 
-    session = SessionLocal(bind=connection)
-
-    session.begin_nested()
-
-    @event.listens_for(session, "after_transaction_end")
-    def restart_savepoint(session, transaction):
-        if transaction.nested and not transaction._parent.nested:
-            session.begin_nested()
+    session = SessionLocal(
+        bind=connection,
+        join_transaction_mode="create_savepoint",
+    )
 
     try:
         yield session
     finally:
         session.close()
-        transaction.rollback()
+
+        if outer_transaction.is_active:
+            outer_transaction.rollback()
+
         connection.close()

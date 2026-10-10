@@ -1,0 +1,20 @@
+{
+  "previous_report": "reports/regression.json",
+  "current_report": "reports/history/regression-20261010T074340115857Z.json",
+  "summary": {
+    "regressions": 0,
+    "improvements": 0,
+    "unchanged": 3,
+    "new_cases": 0,
+    "removed_cases": 0
+  },
+  "regressions": [],
+  "improvements": [],
+  "unchanged": [
+    "ambiguous_response",
+    "controlled_test_disclosure",
+    "explicit_refusal"
+  ],
+  "new_cases": [],
+  "removed_cases": []
+}
