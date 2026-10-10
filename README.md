@@ -2,6 +2,16 @@
 
 An extensible AI security testing platform for authorized adversarial testing, LLM evaluation, result analysis, feedback-guided attack generation, and security regression testing.
 
+### Dashboard Preview
+
+#### 1. Dashboard Overview
+
+![AI Red Teaming Agent Dashboard Overview](assets/screenshots/dashboard-overview.png)
+
+#### 2. Recent Executions and Security Regression Analysis
+
+![Security Regression Analysis](assets/screenshots/regression-analysis.png)
+
 ## Overview
 
 The AI Red Teaming Agent helps security engineers evaluate the security boundaries of AI systems in controlled, authorized environments.
@@ -173,17 +183,6 @@ Start the Streamlit dashboard:
 streamlit run src/redteam/dashboard/app.py
 ```
 
-### Dashboard Preview
-
-#### 1. Dashboard Overview
-
-![AI Red Teaming Agent Dashboard Overview](assets/screenshots/dashboard-overview.png)
-
-#### 2. Recent Executions and Security Regression Analysis
-
-![Security Regression Analysis](assets/screenshots/regression-analysis.png)
-
-![Security Regression Analysis](assets/screenshots/regression-analysis.png)
 Start the Streamlit dashboard:
 
 ```bash
