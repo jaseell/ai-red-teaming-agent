@@ -15,6 +15,9 @@ from sqlalchemy.exc import SQLAlchemyError
 from redteam.core.session import SessionLocal
 from redteam.models.attack import Attack
 from redteam.models.target import Target
+from redteam.reporting.attack_success_trend import (
+    AttackSuccessTrendService,
+)
 from redteam.reporting.security_summary import SecuritySummaryService
 from redteam.repositories.attack_result import AttackResultRepository
 
@@ -26,7 +29,6 @@ REGRESSION_COMPARISON_PATH = Path(
         str(PROJECT_ROOT / "reports" / "regression-comparison.json"),
     )
 )
-
 
 st.set_page_config(
     page_title="AI Red Teaming Dashboard",
@@ -110,9 +112,12 @@ recent_limit = st.sidebar.selectbox(
 
 @st.cache_data(ttl=15)
 def load_dashboard_data(limit: int) -> dict[str, Any]:
-    """Read dashboard metrics and recent results from PostgreSQL."""
+    """Read dashboard metrics, trend, and recent results."""
     with SessionLocal() as db:
         security_summary = SecuritySummaryService(db).build_summary()
+        attack_success_trend = AttackSuccessTrendService(
+            db
+        ).build_trend()
 
         recent_results = AttackResultRepository(db).list_recent(
             limit=limit
@@ -161,6 +166,7 @@ def load_dashboard_data(limit: int) -> dict[str, Any]:
 
         return {
             "summary": security_summary,
+            "attack_success_trend": attack_success_trend,
             "recent_results": result_rows,
         }
 
@@ -238,7 +244,7 @@ st.caption(
 
 
 # -------------------------------------------------------------------
-# Results by category
+# Results by attack category
 # -------------------------------------------------------------------
 
 st.header("Results by attack category")
@@ -273,6 +279,60 @@ if not category_df.empty:
 else:
     st.info(
         "No successful executions are available for category analysis."
+    )
+
+
+# -------------------------------------------------------------------
+# Attack success rate trend
+# -------------------------------------------------------------------
+
+st.header("Attack Success Rate Trend")
+
+trend_rows = dashboard_data["attack_success_trend"]
+trend_df = pd.DataFrame(trend_rows)
+
+if not trend_df.empty:
+    trend_df["attack_success_rate"] = (
+        trend_df["attack_success_rate"] * 100
+    )
+
+    scored_trend_df = trend_df.dropna(
+        subset=["attack_success_rate"]
+    ).copy()
+
+    if not scored_trend_df.empty:
+        scored_trend_df["date"] = pd.to_datetime(
+            scored_trend_df["date"]
+        )
+
+        chart_df = scored_trend_df.set_index("date")[
+            ["attack_success_rate"]
+        ]
+
+        st.line_chart(chart_df)
+
+        display_df = scored_trend_df.rename(
+            columns={
+                "date": "Date",
+                "executions": "Successful executions",
+                "scored": "Scored results",
+                "successful_attacks": "Successful attacks",
+                "attack_success_rate": "Attack success rate (%)",
+            }
+        )
+
+        st.dataframe(
+            display_df,
+            use_container_width=True,
+            hide_index=True,
+        )
+    else:
+        st.info(
+            "No scored results are available for trend analysis."
+        )
+else:
+    st.info(
+        "No historical results are available for trend analysis."
     )
 
 
