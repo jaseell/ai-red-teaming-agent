@@ -1,0 +1,64 @@
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Lint and test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: redteam_test
+          POSTGRES_USER: redteam
+          POSTGRES_PASSWORD: ci-test-password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U redteam -d redteam_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      POSTGRES_DB: redteam_test
+      POSTGRES_USER: redteam
+      POSTGRES_PASSWORD: ci-test-password
+      POSTGRES_HOST: localhost
+      POSTGRES_PORT: "5432"
+      TEST_POSTGRES_DB: redteam_test
+      APP_ENV: test
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - name: Install dependencies
+        run: python -m pip install -e ".[dev]"
+
+      - name: Check code style
+        run: ruff check .
+
+      - name: Apply database migrations
+        run: alembic upgrade head
+
+      - name: Run tests
+        run: pytest -q
