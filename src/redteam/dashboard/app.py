@@ -1,4 +1,5 @@
 
+import base64
 import json
 import os
 from datetime import UTC, datetime
@@ -7,6 +8,7 @@ from typing import Any
 
 import pandas as pd
 import streamlit as st
+import streamlit.components.v1 as components
 from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -31,6 +33,49 @@ st.set_page_config(
     page_icon="🛡️",
     layout="wide",
 )
+
+THEME_PATH = Path(__file__).with_name("theme.css")
+BACKGROUND_PATH = PROJECT_ROOT / "assets" / "hacker-background.png"
+
+
+def apply_hacker_theme() -> None:
+    css = THEME_PATH.read_text(encoding="utf-8")
+
+    if BACKGROUND_PATH.exists():
+        encoded = base64.b64encode(
+            BACKGROUND_PATH.read_bytes()
+        ).decode("ascii")
+
+        css += f"""
+        [data-testid="stAppViewContainer"] {{
+            background-image:
+                linear-gradient(
+                    rgba(5, 5, 8, 0.78),
+                    rgba(5, 5, 8, 0.94)
+                ),
+                url("data:image/png;base64,{encoded}");
+            background-size: cover;
+            background-position: center top;
+            background-attachment: fixed;
+        }}
+        """
+
+    st.markdown(
+        f"<style>{css}</style>",
+        unsafe_allow_html=True,
+    )
+
+
+apply_hacker_theme()
+
+ANIMATION_PATH = Path(__file__).with_name("animation.html")
+
+if ANIMATION_PATH.exists():
+    components.html(
+        ANIMATION_PATH.read_text(encoding="utf-8"),
+        height=1,
+        scrolling=False,
+    )
 
 st.title("🛡️ AI Red Teaming Dashboard")
 st.caption(
