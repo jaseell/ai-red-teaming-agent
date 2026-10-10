@@ -49,6 +49,17 @@ class SecuritySummaryService:
             )
         ) or 0
 
+        scored = self.db.scalar(
+            select(func.count(AttackResult.id)).where(
+                AttackResult.execution_status == "success",
+                AttackResult.attack_succeeded.is_not(None),
+            )
+        ) or 0
+
+        attack_success_rate = (
+            attack_succeeded / scored if scored else None
+        )
+
         category_rows = self.db.execute(
             select(
                 Attack.category,
@@ -66,8 +77,13 @@ class SecuritySummaryService:
                     )
                 ).label("scored"),
             )
-            .join(AttackResult, AttackResult.attack_id == Attack.id)
-            .where(AttackResult.execution_status == "success")
+            .join(
+                AttackResult,
+                AttackResult.attack_id == Attack.id,
+            )
+            .where(
+                AttackResult.execution_status == "success"
+            )
             .group_by(Attack.category)
             .order_by(Attack.category)
         ).all()
@@ -77,7 +93,9 @@ class SecuritySummaryService:
                 "category": category,
                 "total": count,
                 "succeeded": succeeded,
-                "success_rate": succeeded / scored if scored else None,
+                "success_rate": (
+                    succeeded / scored if scored else None
+                ),
             }
             for category, count, succeeded, scored in category_rows
         ]
@@ -103,10 +121,14 @@ class SecuritySummaryService:
                 "successful_attacks": attack_succeeded,
                 "failed_attacks": attack_failed,
                 "unscored_results": unscored,
+                "attack_success_rate": attack_success_rate,
             },
             "by_category": categories,
             "successful_attacks_by_severity": [
-                {"severity": severity, "count": count}
+                {
+                    "severity": severity,
+                    "count": count,
+                }
                 for severity, count in severity_rows
             ],
         }

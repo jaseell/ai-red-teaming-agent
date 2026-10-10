@@ -39,6 +39,9 @@ BACKGROUND_PATH = PROJECT_ROOT / "assets" / "hacker-background.png"
 
 
 def apply_hacker_theme() -> None:
+    if not THEME_PATH.exists():
+        return
+
     css = THEME_PATH.read_text(encoding="utf-8")
 
     if BACKGROUND_PATH.exists():
@@ -91,6 +94,7 @@ st.caption(
 st.sidebar.header("Dashboard controls")
 
 if st.sidebar.button("Refresh dashboard", use_container_width=True):
+    st.cache_data.clear()
     st.rerun()
 
 recent_limit = st.sidebar.selectbox(
@@ -109,6 +113,7 @@ def load_dashboard_data(limit: int) -> dict[str, Any]:
     """Read dashboard metrics and recent results from PostgreSQL."""
     with SessionLocal() as db:
         security_summary = SecuritySummaryService(db).build_summary()
+
         recent_results = AttackResultRepository(db).list_recent(
             limit=limit
         )
@@ -203,7 +208,7 @@ col4.metric(
     summary["successful_attacks"],
 )
 
-col5, col6 = st.columns(2)
+col5, col6, col7 = st.columns(3)
 
 col5.metric(
     "Failed attacks",
@@ -214,9 +219,21 @@ col6.metric(
     summary["unscored_results"],
 )
 
+attack_success_rate = summary.get("attack_success_rate")
+
+col7.metric(
+    "Attack success rate",
+    (
+        f"{attack_success_rate:.1%}"
+        if attack_success_rate is not None
+        else "N/A"
+    ),
+)
+
 st.caption(
     "Execution success means the test ran successfully. "
-    "Attack success means the evaluator judged the attack successful."
+    "Attack success means the evaluator judged the attack successful. "
+    "Attack success rate uses only scored executions."
 )
 
 
@@ -245,7 +262,7 @@ if not category_df.empty:
         display_category_df.rename(
             columns={
                 "category": "Category",
-                "total": "Scored executions",
+                "total": "Successful executions",
                 "succeeded": "Successful attacks",
                 "success_rate": "Attack success rate (%)",
             }
@@ -254,7 +271,9 @@ if not category_df.empty:
         hide_index=True,
     )
 else:
-    st.info("No successful executions are available for category analysis.")
+    st.info(
+        "No successful executions are available for category analysis."
+    )
 
 
 # -------------------------------------------------------------------
@@ -412,10 +431,12 @@ else:
         show_cases("Removed cases", removed_cases)
 
         st.caption(
-            f"Previous report: {comparison.get('previous_report', 'Unknown')}"
+            f"Previous report: "
+            f"{comparison.get('previous_report', 'Unknown')}"
         )
         st.caption(
-            f"Current report: {comparison.get('current_report', 'Unknown')}"
+            f"Current report: "
+            f"{comparison.get('current_report', 'Unknown')}"
         )
 
     except (

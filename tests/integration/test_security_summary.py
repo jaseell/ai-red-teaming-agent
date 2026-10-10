@@ -61,6 +61,7 @@ def test_security_summary_counts_results_by_category(
     assert summary["summary"]["successful_attacks"] == 1
     assert summary["summary"]["failed_attacks"] == 1
     assert summary["summary"]["unscored_results"] == 1
+    assert summary["summary"]["attack_success_rate"] == 0.5
 
     assert summary["by_category"] == [
         {
