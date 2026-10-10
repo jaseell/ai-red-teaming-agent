@@ -173,6 +173,23 @@ Start the Streamlit dashboard:
 streamlit run src/redteam/dashboard/app.py
 ```
 
+### Dashboard Preview
+
+#### 1. Dashboard Overview
+
+![AI Red Teaming Agent Dashboard Overview](assets/screenshots/dashboard-overview.png)
+
+#### 2. Recent Executions and Security Regression Analysis
+
+![Security Regression Analysis](assets/screenshots/regression-analysis.png)
+
+![Security Regression Analysis](assets/screenshots/regression-analysis.png)
+Start the Streamlit dashboard:
+
+```bash
+streamlit run src/redteam/dashboard/app.py
+```
+
 Open the local URL printed by Streamlit, usually:
 
 `http://localhost:8501`
