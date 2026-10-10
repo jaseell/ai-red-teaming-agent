@@ -1,14 +1,14 @@
 # AI Red Teaming Agent
 
-An extensible AI security testing platform for authorized adversarial testing, LLM evaluation, result analysis, feedback-guided attack generation, and security regression testing.
+An extensible AI security testing platform for authorized adversarial testing, LLM evaluation, feedback-guided attack generation, and security regression testing.
 
-### Dashboard Preview
+## Dashboard Preview
 
-#### 1. Dashboard Overview
+### Dashboard Overview
 
 ![AI Red Teaming Agent Dashboard Overview](assets/screenshots/dashboard-overview.png)
 
-#### 2. Recent Executions and Security Regression Analysis
+### Recent Executions and Security Regression Analysis
 
 ![Security Regression Analysis](assets/screenshots/regression-analysis.png)
 
@@ -16,22 +16,22 @@ An extensible AI security testing platform for authorized adversarial testing, L
 
 The AI Red Teaming Agent helps security engineers evaluate the security boundaries of AI systems in controlled, authorized environments.
 
-The platform generates adversarial test cases, executes them against configured targets, evaluates responses, stores results, and compares regression test outcomes over time.
+It generates adversarial test cases, executes them against configured targets, evaluates responses, stores results, and compares security regression outcomes over time.
 
-## Features
+## Key Features
 
 - **Attack Library:** Organize adversarial test cases by category and severity.
 - **Attack Generator:** Generate test cases using mock or OpenAI-backed generators.
-- **Target Adapters:** Connect the testing framework to supported AI targets.
-- **Attack Executor:** Execute test cases and record execution outcomes.
-- **LLM-as-a-Judge:** Evaluate target responses using configurable evaluators, including Ollama and OpenAI-backed evaluation where configured.
+- **Target Adapters:** Connect to supported AI targets.
+- **Attack Executor:** Execute tests and record outcomes.
+- **LLM-as-a-Judge:** Evaluate target responses using supported evaluators.
 - **PostgreSQL Storage:** Persist attacks, executions, and evaluation results.
-- **Feedback-Guided Generation:** Supply historical category-level results to the attack generator.
-- **Security Regression Testing:** Run predefined test cases and compare results across runs.
-- **Reporting:** Generate security summaries and regression comparison reports.
-- **Dashboard:** Explore execution metrics and regression alerts using Streamlit.
+- **Feedback-Guided Generation:** Use historical results as context for future generation.
+- **Security Regression Testing:** Compare test outcomes across runs.
+- **Reporting:** Generate security summaries and regression reports.
+- **Dashboard:** Explore execution metrics and regression results using Streamlit.
 
-> Feedback-guided generation uses historical results as context. Improved attack quality must be demonstrated through controlled experiments; it is not guaranteed.
+Feedback-guided generation does not guarantee improved attack quality; its effectiveness must be evaluated through controlled experiments.
 
 ## Architecture
 
@@ -57,40 +57,36 @@ LLM-as-a-Judge
 PostgreSQL Result Storage
       |
       +----> Reporting
-      |
       +----> Security Regression Testing
-      |
       +----> Streamlit Dashboard
 ```
 
 ## Technology Stack
 
-- Python 3.13+
+- Python
 - SQLAlchemy and Alembic
 - PostgreSQL
-- Pydantic and Pydantic Settings
-- OpenAI API
-- Ollama for local model evaluation
+- Pydantic
+- OpenAI API (optional)
+- Ollama for local model integration
 - Streamlit
 - pytest and Ruff
 - Docker Compose
 
 ## Prerequisites
 
-Install or configure the following before running the project:
-
-- Python 3.13 or newer
+- Python version supported by `pyproject.toml`
 - Docker Engine and Docker Compose
 - Git
 - Ollama and the configured model for local integration tests
-- An OpenAI API key only if using OpenAI-backed functionality
+- OpenAI API key only if using OpenAI-backed features
 
 ## Installation
 
-Clone the repository and enter the project directory:
+Clone the repository:
 
 ```bash
-git clone <YOUR_GITHUB_REPOSITORY_URL>
+git clone https://github.com/jaseell/ai-red-teaming-agent.git
 cd ai-red-teaming-agent
 ```
 
@@ -108,13 +104,13 @@ python -m pip install --upgrade pip
 pip install -e ".[dev]"
 ```
 
-Create the local environment file:
+Create your local environment file:
 
 ```bash
 cp .env.example .env
 ```
 
-Edit `.env` and configure the required database settings and any optional API credentials. Do not commit `.env` or real credentials to Git.
+Configure the required environment variables in `.env`. Never commit real API keys or database credentials.
 
 Start PostgreSQL:
 
@@ -123,13 +119,19 @@ docker compose up -d
 docker compose ps
 ```
 
-Apply database migrations:
+Verify the configured database URL before applying migrations:
 
 ```bash
 alembic upgrade head
 ```
 
-Run database migrations only after verifying the configured database URL and target environment.
+## Running the Dashboard
+
+```bash
+streamlit run src/redteam/dashboard/app.py
+```
+
+Open the local URL printed by Streamlit, typically `http://localhost:8501`.
 
 ## Running Tests
 
@@ -139,13 +141,13 @@ Run lint checks:
 ruff check .
 ```
 
-Run the test suite against the test database:
+Run the test suite against the configured test database:
 
 ```bash
 APP_ENV=test pytest -q
 ```
 
-Run the Ollama integration tests:
+Optional Ollama integration tests:
 
 ```bash
 APP_ENV=test RUN_OLLAMA_INTEGRATION=1 pytest -q \
@@ -153,7 +155,7 @@ APP_ENV=test RUN_OLLAMA_INTEGRATION=1 pytest -q \
   tests/integration/test_ollama_execution_pipeline.py
 ```
 
-The Ollama integration tests require a running local Ollama service and the model expected by the project configuration.
+These integration tests require a running Ollama service and the configured model.
 
 ## Security Regression Testing
 
@@ -163,66 +165,41 @@ Run the regression suite:
 python -m redteam.regression
 ```
 
-The regression workflow evaluates predefined test cases, writes a regression report, and compares outcomes with a previous baseline when available.
-
-Review the generated reports:
+Review generated reports:
 
 - `reports/regression.json`
 - `reports/regression-comparison.json`
 - `reports/history/`
 
-A regression indicates that a case which previously passed now fails. Review the affected cases and investigate the underlying behavior before accepting a new baseline.
-
-Regression results depend on the evaluator, model, prompts, and test configuration. Passing a small test suite does not prove that a target AI system is secure.
-
-## Dashboard
-
-Start the Streamlit dashboard:
-
-```bash
-streamlit run src/redteam/dashboard/app.py
-```
-
-Start the Streamlit dashboard:
-
-```bash
-streamlit run src/redteam/dashboard/app.py
-```
-
-Open the local URL printed by Streamlit, usually:
-
-`http://localhost:8501`
-
-The dashboard displays available execution metrics and regression comparison information. Regression alerts depend on the comparison report generated by the regression workflow.
+Review failed or regressed cases before accepting a new baseline. Results depend on the target model, prompts, evaluator, and test configuration.
 
 ## Project Structure
 
 ```text
 .
-├── migrations/          # Database schema migrations
-├── reports/             # Regression and security reports
-├── scripts/             # Smoke-test utilities
+├── .github/workflows/    # CI workflows (when configured)
+├── assets/
+│   └── screenshots/      # Dashboard screenshots
+├── migrations/           # Database migrations
+├── reports/              # Security and regression reports
+├── scripts/              # Smoke-test utilities
 ├── src/redteam/
-│   ├── adapters/        # Target AI adapters
-│   ├── attack_library/  # Attack test case library
-│   ├── core/            # Configuration and database setup
-│   ├── dashboard/       # Streamlit dashboard
-│   ├── evaluator/       # Response evaluation
-│   ├── executor/        # Attack execution
-│   ├── feedback/        # Historical result analysis
-│   ├── generator/       # Attack generation
-│   ├── models/          # Database models
-│   ├── regression/      # Regression test runner
-│   ├── reporting/       # Report generation and comparison
-│   └── repositories/    # Database access
-├── tests/
-│   ├── fakes/
-│   ├── integration/
-│   └── unit/
-├── docker-compose.yml
-├── alembic.ini
-├── pyproject.toml
-└── README.md
+│   ├── adapters/
+│   ├── attack_library/
+│   ├── core/
+│   ├── dashboard/
+│   ├── evaluator/
+│   ├── executor/
+│   ├── feedback/
+│   ├── generator/
+│   ├── models/
+│   ├── regression/
+│   ├── reporting/
+│   └── repositories/
+└── tests/
+    ├── fakes/
+    ├── integration/
+    └── unit/
 ```
 
 ## Security and Responsible Use
@@ -232,33 +209,23 @@ This project is intended for authorized AI security research and defensive testi
 - Test only systems you own or have explicit permission to assess.
 - Prefer local models and controlled test environments.
 - Protect API keys, database credentials, and test results.
-- Avoid sending sensitive information to external model providers.
-- Review generated test cases before using them against a target.
-- Treat LLM-based evaluation as an estimate rather than definitive proof of vulnerability or safety.
+- Review generated test cases before execution.
+- Treat LLM-based evaluation as an estimate, not definitive proof of security.
+- Verify database and dashboard access controls before exposing services to a network.
 
-## Current Validation
+## Limitations
 
-The development environment has successfully completed:
+Passing a limited test suite does not prove that an AI system is secure. Evaluator accuracy, model variability, test coverage, and reproducibility should be assessed before relying on results in production.
 
-- Ruff lint checks.
-- 74 unit tests.
-- 5 Ollama integration tests.
-- A three-case Ollama regression run.
-- Dashboard regression-alert validation using a controlled test report.
+## Future Improvements
 
-These results describe the tested development environment and do not constitute a production security certification.
-
-## Limitations and Future Improvements
-
-Potential future work includes:
-
-- More target adapters and attack categories.
-- Reproducible benchmark datasets and evaluator calibration.
-- Quantitative evaluation of feedback-guided generation quality.
-- Stronger experiment tracking and model-version comparisons.
-- CI automation and containerized end-to-end tests.
-- Authentication and access controls for shared dashboard deployments.
+- GitHub Actions CI and automated testing
+- More target adapters and attack categories
+- Evaluator calibration and reproducible benchmarks
+- Quantitative feedback-loop evaluation
+- Containerized end-to-end testing
+- Dashboard authentication and access controls
 
 ## License
 
-Add a license before distributing or accepting contributions to this project.
+No license has been selected yet. Add an appropriate license before distributing the project or accepting external contributions.
